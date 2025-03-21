@@ -288,7 +288,6 @@ func getBonusQuota(amount int64) int64 {
 	}
 
 	rules := []TopupRule{
-		{Amount: 1, GetAmount: 2},     // 充值1，实际获得2
 		{Amount: 50, GetAmount: 60},   // 充值50，实际获得60
 		{Amount: 130, GetAmount: 180}, // 充值130，实际获得180
 		{Amount: 230, GetAmount: 360}, // 充值230，实际获得360
