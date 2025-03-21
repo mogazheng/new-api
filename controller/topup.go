@@ -224,7 +224,14 @@ func EpayNotify(c *gin.Context) {
 			}
 			//user, _ := model.GetUserById(topUp.UserId, false)
 			//user.Quota += topUp.Amount * 500000
-			dAmount := decimal.NewFromInt(int64(topUp.Amount))
+
+			// 获取实际应该增加的额度
+			actualAmount := getBonusQuota(topUp.Amount)
+			dAmount := decimal.NewFromInt(int64(actualAmount))
+
+			// 检查是否有奖励
+			hasBonus := actualAmount > topUp.Amount
+
 			dQuotaPerUnit := decimal.NewFromFloat(common.QuotaPerUnit)
 			quotaToAdd := int(dAmount.Mul(dQuotaPerUnit).IntPart())
 			err = model.IncreaseUserQuota(topUp.UserId, quotaToAdd, true)
@@ -233,11 +240,70 @@ func EpayNotify(c *gin.Context) {
 				return
 			}
 			log.Printf("易支付回调更新用户成功 %v", topUp)
-			model.RecordLog(topUp.UserId, model.LogTypeTopup, fmt.Sprintf("使用在线充值成功，充值金额: %v，支付金额：%f", common.LogQuota(quotaToAdd), topUp.Money))
+
+			// 根据是否有奖励来显示不同的充值记录
+			if hasBonus {
+				model.RecordLog(topUp.UserId, model.LogTypeTopup, fmt.Sprintf("使用在线充值成功，充值金额: %v，支付金额：%f，活动奖励：%v", common.LogQuota(quotaToAdd), topUp.Money, common.LogQuota(int(actualAmount-topUp.Amount)*int(common.QuotaPerUnit))))
+			} else {
+				model.RecordLog(topUp.UserId, model.LogTypeTopup, fmt.Sprintf("使用在线充值成功，充值金额: %v，支付金额：%f", common.LogQuota(quotaToAdd), topUp.Money))
+			}
 		}
 	} else {
 		log.Printf("易支付异常回调: %v", verifyInfo)
 	}
+}
+
+// getBonusRate 根据充值金额返回奖励倍率
+func getBonusRate(amount int64) float64 {
+	// 充值活动规则列表
+	// 可以根据需要修改这些规则
+	type TopupRule struct {
+		MinAmount int64   // 最小充值金额
+		BonusRate float64 // 奖励倍率，例如1.2表示赠送20%
+	}
+
+	rules := []TopupRule{
+		{MinAmount: 1000, BonusRate: 1.2},  // 充值1000，赠送20%
+		{MinAmount: 5000, BonusRate: 1.5},  // 充值5000，赠送50%
+		{MinAmount: 10000, BonusRate: 2.0}, // 充值10000，赠送100%
+	}
+
+	// 从大到小检查规则，匹配第一个符合条件的规则
+	for i := len(rules) - 1; i >= 0; i-- {
+		if amount >= rules[i].MinAmount {
+			return rules[i].BonusRate
+		}
+	}
+
+	// 没有匹配的规则，返回1.0表示没有奖励
+	return 1.0
+}
+
+// getBonusQuota 根据充值金额返回实际应该获得的额度
+func getBonusQuota(amount int64) int64 {
+	// 充值活动规则列表 - 指定金额兑换指定额度
+	type TopupRule struct {
+		Amount    int64 // 充值金额
+		GetAmount int64 // 实际获得的额度
+	}
+
+	rules := []TopupRule{
+		{Amount: 1, GetAmount: 2},     // 充值1，实际获得2
+		{Amount: 50, GetAmount: 60},   // 充值50，实际获得60
+		{Amount: 130, GetAmount: 180}, // 充值130，实际获得180
+		{Amount: 230, GetAmount: 360}, // 充值230，实际获得360
+		{Amount: 450, GetAmount: 720}, // 充值450，实际获得720
+	}
+
+	// 精确匹配
+	for _, rule := range rules {
+		if amount == rule.Amount {
+			return rule.GetAmount
+		}
+	}
+
+	// 没有匹配的规则，返回原始金额
+	return amount
 }
 
 func RequestAmount(c *gin.Context) {
