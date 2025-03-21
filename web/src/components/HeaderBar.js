@@ -69,7 +69,9 @@ const systemNameStyle = {
   background: 'linear-gradient(160deg, black 20%, gray 80%)',
   WebkitBackgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
-  padding: '0 5px'
+  padding: '0 5px',
+  display: 'flex',
+  alignItems: 'center'
 };
 
 // 自定义顶部栏按钮图标样式
