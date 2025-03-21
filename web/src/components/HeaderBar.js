@@ -63,9 +63,10 @@ const logoStyle = {
 
 // 自定义顶部栏系统名称样式
 const systemNameStyle = {
-  fontWeight: 'bold',
-  fontSize: '18px',
-  background: 'linear-gradient(45deg, var(--semi-color-primary), var(--semi-color-secondary))',
+  fontWeight: 'bolder',
+  fontSize: '24px',
+  // background: 'linear-gradient(45deg, var(--semi-color-primary), var(--semi-color-secondary))',
+  background: 'linear-gradient(160deg, black 20%, gray 80%)',
   WebkitBackgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
   padding: '0 5px'
@@ -267,23 +268,23 @@ const HeaderBar = () => {
             }}
             selectedKeys={[]}
             // items={headerButtons}
-            onSelect={(key) => {}}
-            header={styleState.isMobile?{
+            onSelect={(key) => { }}
+            header={styleState.isMobile ? {
               logo: (
                 <div style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
                   {
                     !styleState.showSider ?
                       <Button icon={<IconMenu />} theme="light" aria-label={t('展开侧边栏')} onClick={
                         () => styleDispatch({ type: 'SET_SIDER', payload: true })
-                      } />:
+                      } /> :
                       <Button icon={<IconIndentLeft />} theme="light" aria-label={t('闭侧边栏')} onClick={
                         () => styleDispatch({ type: 'SET_SIDER', payload: false })
                       } />
                   }
                   {(isSelfUseMode || isDemoSiteMode) && (
-                    <Tag 
+                    <Tag
                       color={isSelfUseMode ? 'purple' : 'blue'}
-                      style={{ 
+                      style={{
                         position: 'absolute',
                         top: '-8px',
                         right: '-15px',
@@ -300,22 +301,22 @@ const HeaderBar = () => {
                   )}
                 </div>
               ),
-            }:{
+            } : {
               logo: (
                 <div style={logoStyle}>
-                  <img src={logo} alt='logo' style={{ height: '28px' }} />
+                  <img src={logo} alt='logo' style={{ height: '38px' }} />
                 </div>
               ),
               text: (
                 <div style={{ position: 'relative', display: 'inline-block' }}>
                   <span style={systemNameStyle}>{systemName}</span>
                   {(isSelfUseMode || isDemoSiteMode) && (
-                    <Tag 
+                    <Tag
                       color={isSelfUseMode ? 'purple' : 'blue'}
-                      style={{ 
-                        position: 'absolute', 
-                        top: '-10px', 
-                        right: '-25px', 
+                      style={{
+                        position: 'absolute',
+                        top: '-10px',
+                        right: '-25px',
                         fontSize: '0.7rem',
                         padding: '0 4px',
                         whiteSpace: 'nowrap',
@@ -351,7 +352,7 @@ const HeaderBar = () => {
                 <>
                   <Switch
                     checkedText='🌞'
-                    size={styleState.isMobile?'default':'large'}
+                    size={styleState.isMobile ? 'default' : 'large'}
                     checked={theme === 'dark'}
                     uncheckedText='🌙'
                     style={switchStyle}
@@ -401,14 +402,14 @@ const HeaderBar = () => {
                       >
                         {userState.user.username[0]}
                       </Avatar>
-                      {styleState.isMobile?null:<Text style={{ marginLeft: '4px', fontWeight: '500' }}>{userState.user.username}</Text>}
+                      {styleState.isMobile ? null : <Text style={{ marginLeft: '4px', fontWeight: '500' }}>{userState.user.username}</Text>}
                     </Dropdown>
                   </>
                 ) : (
                   <>
                     <Nav.Item
                       itemKey={'login'}
-                      text={!styleState.isMobile?t('登录'):null}
+                      text={!styleState.isMobile ? t('登录') : null}
                       icon={<IconUser style={headerIconStyle} />}
                     />
                     {
