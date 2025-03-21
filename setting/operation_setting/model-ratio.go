@@ -370,98 +370,98 @@ func UpdateCompletionRatioByJSONString(jsonStr string) error {
 func GetCompletionRatio(name string) float64 {
 	GetCompletionRatioMap()
 
-	if strings.Contains(name, "/") {
-		if ratio, ok := CompletionRatio[name]; ok {
-			return ratio
-		}
-	}
-	lowercaseName := strings.ToLower(name)
-	if strings.HasPrefix(name, "gpt-4-gizmo") {
-		name = "gpt-4-gizmo-*"
-	}
-	if strings.HasPrefix(name, "gpt-4o-gizmo") {
-		name = "gpt-4o-gizmo-*"
-	}
-	if strings.HasPrefix(name, "gpt-4") && !strings.HasSuffix(name, "-all") && !strings.HasSuffix(name, "-gizmo-*") {
-		if strings.HasPrefix(name, "gpt-4o") {
-			if name == "gpt-4o-2024-05-13" {
-				return 3
-			}
-			return 4
-		}
-		if strings.HasPrefix(name, "gpt-4.5") {
-			return 2
-		}
-		if strings.HasPrefix(name, "gpt-4-turbo") || strings.HasSuffix(name, "preview") {
-			return 3
-		}
-		return 2
-	}
-	if strings.HasPrefix(name, "o1") || strings.HasPrefix(name, "o3") {
-		return 4
-	}
-	if name == "chatgpt-4o-latest" {
-		return 3
-	}
-	if strings.Contains(name, "claude-instant-1") {
-		return 3
-	} else if strings.Contains(name, "claude-2") {
-		return 3
-	} else if strings.Contains(name, "claude-3") {
-		return 5
-	}
-	if strings.HasPrefix(name, "gpt-3.5") {
-		if name == "gpt-3.5-turbo" || strings.HasSuffix(name, "0125") {
-			// https://openai.com/blog/new-embedding-models-and-api-updates
-			// Updated GPT-3.5 Turbo model and lower pricing
-			return 3
-		}
-		if strings.HasSuffix(name, "1106") {
-			return 2
-		}
-		return 4.0 / 3.0
-	}
-	if strings.HasPrefix(name, "mistral-") {
-		return 3
-	}
-	if strings.HasPrefix(name, "gemini-") {
-		return 4
-	}
-	if strings.HasPrefix(name, "command") {
-		switch name {
-		case "command-r":
-			return 3
-		case "command-r-plus":
-			return 5
-		case "command-r-08-2024":
-			return 4
-		case "command-r-plus-08-2024":
-			return 4
-		default:
-			return 4
-		}
-	}
-	// hint 只给官方上4倍率，由于开源模型供应商自行定价，不对其进行补全倍率进行强制对齐
-	if lowercaseName == "deepseek-chat" || lowercaseName == "deepseek-reasoner" {
-		return 4
-	}
-	if strings.HasPrefix(name, "ERNIE-Speed-") {
-		return 2
-	} else if strings.HasPrefix(name, "ERNIE-Lite-") {
-		return 2
-	} else if strings.HasPrefix(name, "ERNIE-Character") {
-		return 2
-	} else if strings.HasPrefix(name, "ERNIE-Functions") {
-		return 2
-	}
-	switch name {
-	case "llama2-70b-4096":
-		return 0.8 / 0.64
-	case "llama3-8b-8192":
-		return 2
-	case "llama3-70b-8192":
-		return 0.79 / 0.59
-	}
+	// if strings.Contains(name, "/") {
+	// 	if ratio, ok := CompletionRatio[name]; ok {
+	// 		return ratio
+	// 	}
+	// }
+	// lowercaseName := strings.ToLower(name)
+	// if strings.HasPrefix(name, "gpt-4-gizmo") {
+	// 	name = "gpt-4-gizmo-*"
+	// }
+	// if strings.HasPrefix(name, "gpt-4o-gizmo") {
+	// 	name = "gpt-4o-gizmo-*"
+	// }
+	// if strings.HasPrefix(name, "gpt-4") && !strings.HasSuffix(name, "-all") && !strings.HasSuffix(name, "-gizmo-*") {
+	// 	if strings.HasPrefix(name, "gpt-4o") {
+	// 		if name == "gpt-4o-2024-05-13" {
+	// 			return 3
+	// 		}
+	// 		return 4
+	// 	}
+	// 	if strings.HasPrefix(name, "gpt-4.5") {
+	// 		return 2
+	// 	}
+	// 	if strings.HasPrefix(name, "gpt-4-turbo") || strings.HasSuffix(name, "preview") {
+	// 		return 3
+	// 	}
+	// 	return 2
+	// }
+	// if strings.HasPrefix(name, "o1") || strings.HasPrefix(name, "o3") {
+	// 	return 4
+	// }
+	// if name == "chatgpt-4o-latest" {
+	// 	return 3
+	// }
+	// if strings.Contains(name, "claude-instant-1") {
+	// 	return 3
+	// } else if strings.Contains(name, "claude-2") {
+	// 	return 3
+	// } else if strings.Contains(name, "claude-3") {
+	// 	return 5
+	// }
+	// if strings.HasPrefix(name, "gpt-3.5") {
+	// 	if name == "gpt-3.5-turbo" || strings.HasSuffix(name, "0125") {
+	// 		// https://openai.com/blog/new-embedding-models-and-api-updates
+	// 		// Updated GPT-3.5 Turbo model and lower pricing
+	// 		return 3
+	// 	}
+	// 	if strings.HasSuffix(name, "1106") {
+	// 		return 2
+	// 	}
+	// 	return 4.0 / 3.0
+	// }
+	// if strings.HasPrefix(name, "mistral-") {
+	// 	return 3
+	// }
+	// if strings.HasPrefix(name, "gemini-") {
+	// 	return 4
+	// }
+	// if strings.HasPrefix(name, "command") {
+	// 	switch name {
+	// 	case "command-r":
+	// 		return 3
+	// 	case "command-r-plus":
+	// 		return 5
+	// 	case "command-r-08-2024":
+	// 		return 4
+	// 	case "command-r-plus-08-2024":
+	// 		return 4
+	// 	default:
+	// 		return 4
+	// 	}
+	// }
+	// // hint 只给官方上4倍率，由于开源模型供应商自行定价，不对其进行补全倍率进行强制对齐
+	// if lowercaseName == "deepseek-chat" || lowercaseName == "deepseek-reasoner" {
+	// 	return 4
+	// }
+	// if strings.HasPrefix(name, "ERNIE-Speed-") {
+	// 	return 2
+	// } else if strings.HasPrefix(name, "ERNIE-Lite-") {
+	// 	return 2
+	// } else if strings.HasPrefix(name, "ERNIE-Character") {
+	// 	return 2
+	// } else if strings.HasPrefix(name, "ERNIE-Functions") {
+	// 	return 2
+	// }
+	// switch name {
+	// case "llama2-70b-4096":
+	// 	return 0.8 / 0.64
+	// case "llama3-8b-8192":
+	// 	return 2
+	// case "llama3-70b-8192":
+	// 	return 0.79 / 0.59
+	// }
 	if ratio, ok := CompletionRatio[name]; ok {
 		return ratio
 	}
