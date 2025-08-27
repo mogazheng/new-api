@@ -1,3 +1,22 @@
+/*
+Copyright (C) 2025 QuantumNous
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+For commercial licensing, please contact support@quantumnous.com
+*/
+
 import React, { useEffect, useState, useRef } from 'react';
 import { Button, Col, Form, Row, Spin } from '@douyinfe/semi-ui';
 import {
@@ -5,7 +24,8 @@ import {
   API,
   showError,
   showSuccess,
-  showWarning, verifyJSON
+  showWarning,
+  verifyJSON,
 } from '../../../helpers';
 import { useTranslation } from 'react-i18next';
 
@@ -43,7 +63,8 @@ export default function SettingsMonitoring(props) {
         if (requestQueue.length === 1) {
           if (res.includes(undefined)) return;
         } else if (requestQueue.length > 1) {
-          if (res.includes(undefined)) return showError(t('部分保存失败，请重试'));
+          if (res.includes(undefined))
+            return showError(t('部分保存失败，请重试'));
         }
         showSuccess(t('保存成功'));
         props.refresh();
@@ -67,7 +88,7 @@ export default function SettingsMonitoring(props) {
     setInputsRow(structuredClone(currentInputs));
     refForm.current.setValues(currentInputs);
   }, [props.options]);
-  
+
   return (
     <>
       <Spin spinning={loading}>
@@ -84,7 +105,9 @@ export default function SettingsMonitoring(props) {
                   step={1}
                   min={0}
                   suffix={t('秒')}
-                  extraText={t('当运行通道全部测试时，超过此时间将自动禁用通道')}
+                  extraText={t(
+                    '当运行通道全部测试时，超过此时间将自动禁用通道',
+                  )}
                   placeholder={''}
                   field={'ChannelDisableThreshold'}
                   onChange={(value) =>
@@ -150,10 +173,14 @@ export default function SettingsMonitoring(props) {
                 <Form.TextArea
                   label={t('自动禁用关键词')}
                   placeholder={t('一行一个，不区分大小写')}
-                  extraText={t('当上游通道返回错误中包含这些关键词时（不区分大小写），自动禁用通道')}
+                  extraText={t(
+                    '当上游通道返回错误中包含这些关键词时（不区分大小写），自动禁用通道',
+                  )}
                   field={'AutomaticDisableKeywords'}
                   autosize={{ minRows: 6, maxRows: 12 }}
-                  onChange={(value) => setInputs({ ...inputs, AutomaticDisableKeywords: value })}
+                  onChange={(value) =>
+                    setInputs({ ...inputs, AutomaticDisableKeywords: value })
+                  }
                 />
               </Col>
             </Row>

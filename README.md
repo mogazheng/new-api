@@ -44,6 +44,9 @@
 
 详细文档请访问我们的官方Wiki：[https://docs.newapi.pro/](https://docs.newapi.pro/)
 
+也可访问AI生成的DeepWiki:
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/QuantumNous/new-api)
+
 ## ✨ 主要特性
 
 New API提供了丰富的功能，详细特性请参考[特性说明](https://docs.newapi.pro/wiki/features-introduction)：
@@ -97,7 +100,7 @@ New API提供了丰富的功能，详细特性请参考[特性说明](https://do
 详细配置说明请参考[安装指南-环境变量配置](https://docs.newapi.pro/installation/environment-variables)：
 
 - `GENERATE_DEFAULT_TOKEN`：是否为新注册用户生成初始令牌，默认为 `false`
-- `STREAMING_TIMEOUT`：流式回复超时时间，默认60秒
+- `STREAMING_TIMEOUT`：流式回复超时时间，默认300秒
 - `DIFY_DEBUG`：Dify渠道是否输出工作流和节点信息，默认 `true`
 - `FORCE_STREAM_OPTION`：是否覆盖客户端stream_options参数，默认 `true`
 - `GET_MEDIA_TOKEN`：是否统计图片token，默认 `true`
@@ -107,9 +110,10 @@ New API提供了丰富的功能，详细特性请参考[特性说明](https://do
 - `GEMINI_VISION_MAX_IMAGE_NUM`：Gemini模型最大图片数量，默认 `16`
 - `MAX_FILE_DOWNLOAD_MB`: 最大文件下载大小，单位MB，默认 `20`
 - `CRYPTO_SECRET`：加密密钥，用于加密数据库内容
-- `AZURE_DEFAULT_API_VERSION`：Azure渠道默认API版本，默认 `2024-12-01-preview`
+- `AZURE_DEFAULT_API_VERSION`：Azure渠道默认API版本，默认 `2025-04-01-preview`
 - `NOTIFICATION_LIMIT_DURATION_MINUTE`：通知限制持续时间，默认 `10`分钟
 - `NOTIFY_LIMIT_COUNT`：用户通知在指定持续时间内的最大数量，默认 `2`
+- `ERROR_LOG_ENABLED=true`: 是否记录并显示错误日志，默认`false`
 
 ## 部署
 
@@ -117,7 +121,6 @@ New API提供了丰富的功能，详细特性请参考[特性说明](https://do
 
 > [!TIP]
 > 最新版Docker镜像：`calciumion/new-api:latest`  
-> 默认账号root 密码123456
 
 ### 多机部署注意事项
 - 必须设置环境变量 `SESSION_SECRET`，否则会导致多机部署时登录状态不一致
@@ -131,7 +134,7 @@ New API提供了丰富的功能，详细特性请参考[特性说明](https://do
 
 #### 使用宝塔面板Docker功能部署
 安装宝塔面板（**9.2.0版本**及以上），在应用商店中找到**New-API**安装即可。
-[图文教程](BT.md)
+[图文教程](./docs/BT.md)
 
 #### 使用Docker Compose部署（推荐）
 ```shell
@@ -177,7 +180,6 @@ docker run --name new-api -d --restart always -p 3000:3000 -e SQL_DSN="root:1234
 
 其他基于New API的项目：
 - [new-api-horizon](https://github.com/Calcium-Ion/new-api-horizon)：New API高性能优化版
-- [VoAPI](https://github.com/VoAPI/VoAPI)：基于New API的前端美化版本
 
 ## 帮助支持
 
@@ -185,6 +187,24 @@ docker run --name new-api -d --restart always -p 3000:3000 -e SQL_DSN="root:1234
 - [社区交流](https://docs.newapi.pro/support/community-interaction)
 - [反馈问题](https://docs.newapi.pro/support/feedback-issues)
 - [常见问题](https://docs.newapi.pro/support/faq)
+
+## 🤝 我们信任的合作伙伴
+
+<p align="center">
+  <a href="https://www.cherry-ai.com/" target="_blank"><img
+    src="./docs/images/cherry-studio.svg" alt="Cherry Studio" height="58"
+  /></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://bda.pku.edu.cn/" target="_blank"><img
+    src="./docs/images/pku.png" alt="北京大学" height="58"
+  /></a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://www.compshare.cn/?ytag=GPU_yy_gh_newapi" target="_blank"><img
+    src="./docs/images/ucloud.svg" alt="UCloud 优刻得" height="58"
+  /></a>
+</p>
+
+<p align="center"><em>排名不分先后</em></p>
 
 ## 🌟 Star History
 

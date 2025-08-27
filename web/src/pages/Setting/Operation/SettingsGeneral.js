@@ -1,5 +1,32 @@
+/*
+Copyright (C) 2025 QuantumNous
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+For commercial licensing, please contact support@quantumnous.com
+*/
+
 import React, { useEffect, useState, useRef } from 'react';
-import { Banner, Button, Col, Form, Row, Spin, Collapse, Modal } from '@douyinfe/semi-ui';
+import {
+  Banner,
+  Button,
+  Col,
+  Form,
+  Row,
+  Spin,
+  Modal,
+} from '@douyinfe/semi-ui';
 import {
   compareObjects,
   API,
@@ -18,6 +45,7 @@ export default function GeneralSettings(props) {
     'general_setting.docs_link': '',
     QuotaPerUnit: '',
     RetryTimes: '',
+    USDExchangeRate: '',
     DisplayInCurrencyEnabled: false,
     DisplayTokenStatEnabled: false,
     DefaultCollapseSidebar: false,
@@ -27,9 +55,10 @@ export default function GeneralSettings(props) {
   const refForm = useRef();
   const [inputsRow, setInputsRow] = useState(inputs);
 
-  function onChange(value, e) {
-    const name = e.target.id;
-    setInputs((inputs) => ({ ...inputs, [name]: value }));
+  function handleFieldChange(fieldName) {
+    return (value) => {
+      setInputs((inputs) => ({ ...inputs, [fieldName]: value }));
+    };
   }
 
   function onSubmit() {
@@ -53,7 +82,8 @@ export default function GeneralSettings(props) {
         if (requestQueue.length === 1) {
           if (res.includes(undefined)) return;
         } else if (requestQueue.length > 1) {
-          if (res.includes(undefined)) return showError(t('部分保存失败，请重试'));
+          if (res.includes(undefined))
+            return showError(t('部分保存失败，请重试'));
         }
         showSuccess(t('保存成功'));
         props.refresh();
@@ -81,10 +111,6 @@ export default function GeneralSettings(props) {
   return (
     <>
       <Spin spinning={loading}>
-        <Banner
-          type='warning'
-          description={t('聊天链接功能已经弃用，请使用下方聊天设置功能')}
-        />
         <Form
           values={inputs}
           getFormApi={(formAPI) => (refForm.current = formAPI)}
@@ -98,7 +124,7 @@ export default function GeneralSettings(props) {
                   label={t('充值链接')}
                   initValue={''}
                   placeholder={t('例如发卡网站的购买链接')}
-                  onChange={onChange}
+                  onChange={handleFieldChange('TopUpLink')}
                   showClear
                 />
               </Col>
@@ -108,7 +134,7 @@ export default function GeneralSettings(props) {
                   label={t('文档地址')}
                   initValue={''}
                   placeholder={t('例如 https://docs.newapi.pro')}
-                  onChange={onChange}
+                  onChange={handleFieldChange('general_setting.docs_link')}
                   showClear
                 />
               </Col>
@@ -118,9 +144,19 @@ export default function GeneralSettings(props) {
                   label={t('单位美元额度')}
                   initValue={''}
                   placeholder={t('一单位货币能兑换的额度')}
-                  onChange={onChange}
+                  onChange={handleFieldChange('QuotaPerUnit')}
                   showClear
                   onClick={() => setShowQuotaWarning(true)}
+                />
+              </Col>
+              <Col xs={24} sm={12} md={8} lg={8} xl={8}>
+                <Form.Input
+                  field={'USDExchangeRate'}
+                  label={t('美元汇率（非充值汇率，仅用于定价页面换算）')}
+                  initValue={''}
+                  placeholder={t('美元汇率')}
+                  onChange={handleFieldChange('USDExchangeRate')}
+                  showClear
                 />
               </Col>
               <Col xs={24} sm={12} md={8} lg={8} xl={8}>
@@ -129,7 +165,7 @@ export default function GeneralSettings(props) {
                   label={t('失败重试次数')}
                   initValue={''}
                   placeholder={t('失败重试次数')}
-                  onChange={onChange}
+                  onChange={handleFieldChange('RetryTimes')}
                   showClear
                 />
               </Col>
@@ -142,12 +178,7 @@ export default function GeneralSettings(props) {
                   size='default'
                   checkedText='｜'
                   uncheckedText='〇'
-                  onChange={(value) => {
-                    setInputs({
-                      ...inputs,
-                      DisplayInCurrencyEnabled: value,
-                    });
-                  }}
+                  onChange={handleFieldChange('DisplayInCurrencyEnabled')}
                 />
               </Col>
               <Col xs={24} sm={12} md={8} lg={8} xl={8}>
@@ -157,12 +188,7 @@ export default function GeneralSettings(props) {
                   size='default'
                   checkedText='｜'
                   uncheckedText='〇'
-                  onChange={(value) =>
-                    setInputs({
-                      ...inputs,
-                      DisplayTokenStatEnabled: value,
-                    })
-                  }
+                  onChange={handleFieldChange('DisplayTokenStatEnabled')}
                 />
               </Col>
               <Col xs={24} sm={12} md={8} lg={8} xl={8}>
@@ -172,12 +198,7 @@ export default function GeneralSettings(props) {
                   size='default'
                   checkedText='｜'
                   uncheckedText='〇'
-                  onChange={(value) =>
-                    setInputs({
-                      ...inputs,
-                      DefaultCollapseSidebar: value,
-                    })
-                  }
+                  onChange={handleFieldChange('DefaultCollapseSidebar')}
                 />
               </Col>
             </Row>
@@ -189,12 +210,7 @@ export default function GeneralSettings(props) {
                   size='default'
                   checkedText='｜'
                   uncheckedText='〇'
-                  onChange={(value) =>
-                    setInputs({
-                      ...inputs,
-                      DemoSiteEnabled: value
-                    })
-                  }
+                  onChange={handleFieldChange('DemoSiteEnabled')}
                 />
               </Col>
               <Col xs={24} sm={12} md={8} lg={8} xl={8}>
@@ -205,12 +221,7 @@ export default function GeneralSettings(props) {
                   size='default'
                   checkedText='｜'
                   uncheckedText='〇'
-                  onChange={(value) =>
-                    setInputs({
-                      ...inputs,
-                      SelfUseModeEnabled: value
-                    })
-                  }
+                  onChange={handleFieldChange('SelfUseModeEnabled')}
                 />
               </Col>
             </Row>
@@ -222,7 +233,7 @@ export default function GeneralSettings(props) {
           </Form.Section>
         </Form>
       </Spin>
-      
+
       <Modal
         title={t('警告')}
         visible={showQuotaWarning}
@@ -233,7 +244,9 @@ export default function GeneralSettings(props) {
       >
         <Banner
           type='warning'
-          description={t('此设置用于系统内部计算，默认值500000是为了精确到6位小数点设计，不推荐修改。')}
+          description={t(
+            '此设置用于系统内部计算，默认值500000是为了精确到6位小数点设计，不推荐修改。',
+          )}
           bordered
           fullMode={false}
           closeIcon={null}

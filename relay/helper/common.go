@@ -4,19 +4,29 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"net/http"
 	"one-api/common"
 	"one-api/dto"
+	"one-api/types"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 func SetEventStreamHeaders(c *gin.Context) {
+	// 检查是否已经设置过头部
+	if _, exists := c.Get("event_stream_headers_set"); exists {
+		return
+	}
+
 	c.Writer.Header().Set("Content-Type", "text/event-stream")
 	c.Writer.Header().Set("Cache-Control", "no-cache")
 	c.Writer.Header().Set("Connection", "keep-alive")
 	c.Writer.Header().Set("Transfer-Encoding", "chunked")
 	c.Writer.Header().Set("X-Accel-Buffering", "no")
+
+	// 设置标志，表示头部已经设置过
+	c.Set("event_stream_headers_set", true)
 }
 
 func ClaudeData(c *gin.Context, resp dto.ClaudeResponse) error {
@@ -43,6 +53,14 @@ func ClaudeChunkData(c *gin.Context, resp dto.ClaudeResponse, data string) {
 	}
 }
 
+func ResponseChunkData(c *gin.Context, resp dto.ResponsesStreamResponse, data string) {
+	c.Render(-1, common.CustomEvent{Data: fmt.Sprintf("event: %s\n", resp.Type)})
+	c.Render(-1, common.CustomEvent{Data: fmt.Sprintf("data: %s", data)})
+	if flusher, ok := c.Writer.(http.Flusher); ok {
+		flusher.Flush()
+	}
+}
+
 func StringData(c *gin.Context, str string) error {
 	//str = strings.TrimPrefix(str, "data: ")
 	//str = strings.TrimSuffix(str, "\r")
@@ -55,8 +73,21 @@ func StringData(c *gin.Context, str string) error {
 	return nil
 }
 
+func PingData(c *gin.Context) error {
+	c.Writer.Write([]byte(": PING\n\n"))
+	if flusher, ok := c.Writer.(http.Flusher); ok {
+		flusher.Flush()
+	} else {
+		return errors.New("streaming error: flusher not found")
+	}
+	return nil
+}
+
 func ObjectData(c *gin.Context, object interface{}) error {
-	jsonData, err := json.Marshal(object)
+	if object == nil {
+		return errors.New("object is nil")
+	}
+	jsonData, err := common.Marshal(object)
 	if err != nil {
 		return fmt.Errorf("error marshalling object: %w", err)
 	}
@@ -89,7 +120,7 @@ func WssObject(c *gin.Context, ws *websocket.Conn, object interface{}) error {
 	return ws.WriteMessage(1, jsonData)
 }
 
-func WssError(c *gin.Context, ws *websocket.Conn, openaiError dto.OpenAIError) {
+func WssError(c *gin.Context, ws *websocket.Conn, openaiError types.OpenAIError) {
 	errorObj := &dto.RealtimeEvent{
 		Type:    "error",
 		EventId: GetLocalRealtimeID(c),
@@ -106,6 +137,24 @@ func GetResponseID(c *gin.Context) string {
 func GetLocalRealtimeID(c *gin.Context) string {
 	logID := c.GetString(common.RequestIdKey)
 	return fmt.Sprintf("evt_%s", logID)
+}
+
+func GenerateStartEmptyResponse(id string, createAt int64, model string, systemFingerprint *string) *dto.ChatCompletionsStreamResponse {
+	return &dto.ChatCompletionsStreamResponse{
+		Id:                id,
+		Object:            "chat.completion.chunk",
+		Created:           createAt,
+		Model:             model,
+		SystemFingerprint: systemFingerprint,
+		Choices: []dto.ChatCompletionsStreamResponseChoice{
+			{
+				Delta: dto.ChatCompletionsStreamResponseChoiceDelta{
+					Role:    "assistant",
+					Content: common.GetPointer(""),
+				},
+			},
+		},
+	}
 }
 
 func GenerateStopResponse(id string, createAt int64, model string, finishReason string) *dto.ChatCompletionsStreamResponse {

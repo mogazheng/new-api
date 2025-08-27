@@ -1,7 +1,6 @@
 package dify
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
@@ -15,6 +14,7 @@ import (
 	relaycommon "one-api/relay/common"
 	"one-api/relay/helper"
 	"one-api/service"
+	"one-api/types"
 	"os"
 	"strings"
 
@@ -96,7 +96,7 @@ func uploadDifyFile(c *gin.Context, info *relaycommon.RelayInfo, user string, me
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", info.ApiKey))
 
 		// Send request
-		client := service.GetImpatientHttpClient()
+		client := service.GetHttpClient()
 		resp, err := client.Do(req)
 		if err != nil {
 			common.SysError("failed to send request: " + err.Error())
@@ -198,21 +198,23 @@ func streamResponseDify2OpenAI(difyResponse DifyChunkChatCompletionResponse) *dt
 			choice.Delta.SetReasoningContent(text + "\n")
 		}
 	} else if difyResponse.Event == "message" || difyResponse.Event == "agent_message" {
+		if difyResponse.Answer == "<details style=\"color:gray;background-color: #f8f8f8;padding: 8px;border-radius: 4px;\" open> <summary> Thinking... </summary>\n" {
+			difyResponse.Answer = "<think>"
+		} else if difyResponse.Answer == "</details>" {
+			difyResponse.Answer = "</think>"
+		}
+
 		choice.Delta.SetContentString(difyResponse.Answer)
 	}
 	response.Choices = append(response.Choices, choice)
 	return &response
 }
 
-func difyStreamHandler(c *gin.Context, resp *http.Response, info *relaycommon.RelayInfo) (*dto.OpenAIErrorWithStatusCode, *dto.Usage) {
+func difyStreamHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Response) (*dto.Usage, *types.NewAPIError) {
 	var responseText string
 	usage := &dto.Usage{}
-	scanner := bufio.NewScanner(resp.Body)
-	scanner.Split(bufio.ScanLines)
 	var nodeToken int
-
 	helper.SetEventStreamHeaders(c)
-
 	helper.StreamScannerHandler(c, resp, info, func(data string) bool {
 		var difyResponse DifyChunkChatCompletionResponse
 		err := json.Unmarshal([]byte(data), &difyResponse)
@@ -241,38 +243,25 @@ func difyStreamHandler(c *gin.Context, resp *http.Response, info *relaycommon.Re
 		}
 		return true
 	})
-	if err := scanner.Err(); err != nil {
-		common.SysError("error reading stream: " + err.Error())
-	}
 	helper.Done(c)
-	err := resp.Body.Close()
-	if err != nil {
-		//return service.OpenAIErrorWrapper(err, "close_response_body_failed", http.StatusInternalServerError), nil
-		common.SysError("close_response_body_failed: " + err.Error())
-	}
 	if usage.TotalTokens == 0 {
-		usage.PromptTokens = info.PromptTokens
-		usage.CompletionTokens, _ = service.CountTextToken("gpt-3.5-turbo", responseText)
-		usage.TotalTokens = usage.PromptTokens + usage.CompletionTokens
+		usage = service.ResponseText2Usage(responseText, info.UpstreamModelName, info.PromptTokens)
 	}
 	usage.CompletionTokens += nodeToken
-	return nil, usage
+	return usage, nil
 }
 
-func difyHandler(c *gin.Context, resp *http.Response, info *relaycommon.RelayInfo) (*dto.OpenAIErrorWithStatusCode, *dto.Usage) {
+func difyHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Response) (*dto.Usage, *types.NewAPIError) {
 	var difyResponse DifyChatCompletionResponse
 	responseBody, err := io.ReadAll(resp.Body)
 
 	if err != nil {
-		return service.OpenAIErrorWrapper(err, "read_response_body_failed", http.StatusInternalServerError), nil
+		return nil, types.NewError(err, types.ErrorCodeBadResponseBody)
 	}
-	err = resp.Body.Close()
-	if err != nil {
-		return service.OpenAIErrorWrapper(err, "close_response_body_failed", http.StatusInternalServerError), nil
-	}
+	common.CloseResponseBodyGracefully(resp)
 	err = json.Unmarshal(responseBody, &difyResponse)
 	if err != nil {
-		return service.OpenAIErrorWrapper(err, "unmarshal_response_body_failed", http.StatusInternalServerError), nil
+		return nil, types.NewError(err, types.ErrorCodeBadResponseBody)
 	}
 	fullTextResponse := dto.OpenAITextResponse{
 		Id:      difyResponse.ConversationId,
@@ -280,22 +269,21 @@ func difyHandler(c *gin.Context, resp *http.Response, info *relaycommon.RelayInf
 		Created: common.GetTimestamp(),
 		Usage:   difyResponse.MetaData.Usage,
 	}
-	content, _ := json.Marshal(difyResponse.Answer)
 	choice := dto.OpenAITextResponseChoice{
 		Index: 0,
 		Message: dto.Message{
 			Role:    "assistant",
-			Content: content,
+			Content: difyResponse.Answer,
 		},
 		FinishReason: "stop",
 	}
 	fullTextResponse.Choices = append(fullTextResponse.Choices, choice)
 	jsonResponse, err := json.Marshal(fullTextResponse)
 	if err != nil {
-		return service.OpenAIErrorWrapper(err, "marshal_response_body_failed", http.StatusInternalServerError), nil
+		return nil, types.NewError(err, types.ErrorCodeBadResponseBody)
 	}
 	c.Writer.Header().Set("Content-Type", "application/json")
 	c.Writer.WriteHeader(resp.StatusCode)
-	_, err = c.Writer.Write(jsonResponse)
-	return nil, &difyResponse.MetaData.Usage
+	c.Writer.Write(jsonResponse)
+	return &difyResponse.MetaData.Usage, nil
 }

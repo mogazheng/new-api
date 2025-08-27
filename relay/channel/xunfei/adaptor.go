@@ -2,18 +2,24 @@ package xunfei
 
 import (
 	"errors"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"one-api/dto"
 	"one-api/relay/channel"
 	relaycommon "one-api/relay/common"
-	"one-api/service"
+	"one-api/types"
 	"strings"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Adaptor struct {
 	request *dto.GeneralOpenAIRequest
+}
+
+func (a *Adaptor) ConvertGeminiRequest(*gin.Context, *relaycommon.RelayInfo, *dto.GeminiChatRequest) (any, error) {
+	//TODO implement me
+	return nil, errors.New("not implemented")
 }
 
 func (a *Adaptor) ConvertClaudeRequest(*gin.Context, *relaycommon.RelayInfo, *dto.ClaudeRequest) (any, error) {
@@ -61,6 +67,11 @@ func (a *Adaptor) ConvertEmbeddingRequest(c *gin.Context, info *relaycommon.Rela
 	return nil, errors.New("not implemented")
 }
 
+func (a *Adaptor) ConvertOpenAIResponsesRequest(c *gin.Context, info *relaycommon.RelayInfo, request dto.OpenAIResponsesRequest) (any, error) {
+	// TODO implement me
+	return nil, errors.New("not implemented")
+}
+
 func (a *Adaptor) DoRequest(c *gin.Context, info *relaycommon.RelayInfo, requestBody io.Reader) (any, error) {
 	// xunfei's request is not http request, so we don't need to do anything here
 	dummyResp := &http.Response{}
@@ -68,18 +79,18 @@ func (a *Adaptor) DoRequest(c *gin.Context, info *relaycommon.RelayInfo, request
 	return dummyResp, nil
 }
 
-func (a *Adaptor) DoResponse(c *gin.Context, resp *http.Response, info *relaycommon.RelayInfo) (usage any, err *dto.OpenAIErrorWithStatusCode) {
+func (a *Adaptor) DoResponse(c *gin.Context, resp *http.Response, info *relaycommon.RelayInfo) (usage any, err *types.NewAPIError) {
 	splits := strings.Split(info.ApiKey, "|")
 	if len(splits) != 3 {
-		return nil, service.OpenAIErrorWrapper(errors.New("invalid auth"), "invalid_auth", http.StatusBadRequest)
+		return nil, types.NewError(errors.New("invalid auth"), types.ErrorCodeChannelInvalidKey)
 	}
 	if a.request == nil {
-		return nil, service.OpenAIErrorWrapper(errors.New("request is nil"), "request_is_nil", http.StatusBadRequest)
+		return nil, types.NewError(errors.New("request is nil"), types.ErrorCodeInvalidRequest)
 	}
 	if info.IsStream {
-		err, usage = xunfeiStreamHandler(c, *a.request, splits[0], splits[1], splits[2])
+		usage, err = xunfeiStreamHandler(c, *a.request, splits[0], splits[1], splits[2])
 	} else {
-		err, usage = xunfeiHandler(c, *a.request, splits[0], splits[1], splits[2])
+		usage, err = xunfeiHandler(c, *a.request, splits[0], splits[1], splits[2])
 	}
 	return
 }

@@ -1,5 +1,7 @@
 package dto
 
+import "one-api/types"
+
 const (
 	RealtimeEventTypeError              = "error"
 	RealtimeEventTypeSessionUpdate      = "session.update"
@@ -23,12 +25,12 @@ type RealtimeEvent struct {
 	EventId string `json:"event_id"`
 	Type    string `json:"type"`
 	//PreviousItemId string `json:"previous_item_id"`
-	Session  *RealtimeSession  `json:"session,omitempty"`
-	Item     *RealtimeItem     `json:"item,omitempty"`
-	Error    *OpenAIError      `json:"error,omitempty"`
-	Response *RealtimeResponse `json:"response,omitempty"`
-	Delta    string            `json:"delta,omitempty"`
-	Audio    string            `json:"audio,omitempty"`
+	Session  *RealtimeSession   `json:"session,omitempty"`
+	Item     *RealtimeItem      `json:"item,omitempty"`
+	Error    *types.OpenAIError `json:"error,omitempty"`
+	Response *RealtimeResponse  `json:"response,omitempty"`
+	Delta    string             `json:"delta,omitempty"`
+	Audio    string             `json:"audio,omitempty"`
 }
 
 type RealtimeResponse struct {
@@ -41,19 +43,6 @@ type RealtimeUsage struct {
 	OutputTokens       int                `json:"output_tokens"`
 	InputTokenDetails  InputTokenDetails  `json:"input_token_details"`
 	OutputTokenDetails OutputTokenDetails `json:"output_token_details"`
-}
-
-type InputTokenDetails struct {
-	CachedTokens         int `json:"cached_tokens"`
-	CachedCreationTokens int
-	TextTokens           int `json:"text_tokens"`
-	AudioTokens          int `json:"audio_tokens"`
-	ImageTokens          int `json:"image_tokens"`
-}
-
-type OutputTokenDetails struct {
-	TextTokens  int `json:"text_tokens"`
-	AudioTokens int `json:"audio_tokens"`
 }
 
 type RealtimeSession struct {
